@@ -27,7 +27,7 @@ public class JqueryDraftsUtil {
                 }
             }
 
-            if (bestDifference < 20) {
+            if (bestDifference < 40) {
                 items.set(bestIndex, text);
             } else {
                 if (items.size() < maxSize) {
