@@ -4,7 +4,7 @@
             'textDrafts':'Drafts',
             'textUseIt':'Use it',
             'url':'/data/drafts.php',
-            'pollDelay': 10000,
+            'pollDelay': 5000,
             'showDelay': 2000
         }, options);
 
