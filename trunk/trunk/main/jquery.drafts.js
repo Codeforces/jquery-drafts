@@ -1,4 +1,23 @@
 (function ($) {
+ 	var textareasToListen = [];
+ 	var buttonsToListen = [];
+	
+    var updateButtonsPosition = function() {
+    	$.each(textareasToListen, function(index, textarea) {
+    		var button = buttonsToListen[index];
+            button.css("top", textarea.position().top + 8);
+            button.css("left", textarea.position().left + textarea.get(0).clientWidth - button.outerWidth() - 6);
+    		
+    		setTimeout(function() {
+        		var button = buttonsToListen[index];
+                button.css("top", textarea.position().top + 8);
+                button.css("left", textarea.position().left + textarea.get(0).clientWidth - button.outerWidth() - 6);
+            }, 1000);
+    	});
+    };
+    
+    setInterval(updateButtonsPosition, 100);
+
     $.fn.drafts = function (options) {
         var settings = $.extend({
             'textDrafts':'Drafts',
@@ -7,17 +26,17 @@
             'pollDelay': 5000,
             'showDelay': 2000
         }, options);
-
+        
         var textareas = this;
         setTimeout(function() {
             textareas.each(function () {
-                if ($(".drafts-prototype").length == 0) {
+                if ($(".drafts-prototype").length === 0) {
                     $("<div class=\"drafts-prototype drafts-show-drafts\"><span class=\"drafts-button\">"
                         + settings["textDrafts"]
                         + "</span></div>").appendTo($("body"));
                 }
 
-                if ($(".drafts-popup").length == 0) {
+                if ($(".drafts-popup").length === 0) {
                     $("<div class=\"drafts-popup\"><div class=\"drafts-close\">&times;</div><h1>"
                         + settings["textDrafts"]
                         + "</h1><div class=\"drafts-entries\"></div></div>").appendTo($("body"));
@@ -50,9 +69,8 @@
                 button.click(function () {
                     var popup = $(".drafts-popup");
                     var entries = popup.find(".drafts-entries");
-                    $.post(settings["url"], {action: 'get', id: id}, function(response) {
+                    $.post(settings["url"], {action: 'get', id: id}, function(items) {
                         entries.empty();
-                        var items = response.split(String.fromCharCode(1));
                         $.each(items, function(index, item) {
                             $("<pre class='drafts-entry-body'></pre>").text(item).appendTo(entries);
                             $("<div class='drafts-entry-actions'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div>").appendTo(entries);
@@ -69,15 +87,10 @@
                 $(textarea.parent()).append(button);
 
                 button.css("position", "absolute");
-
-                var update = function() {
-                    button.css("top", textarea.position().top + 8);
-                    button.css("left", textarea.position().left + textarea.get(0).clientWidth - button.outerWidth() - 6);
-                };
-                update();
-
-                $(window).resize(update);
-                textarea.bind('input propertychange', update);
+                
+                textareasToListen.push(textarea);
+                buttonsToListen.push(button);
+                updateButtonsPosition();
 
                 $(".drafts-popup .drafts-close").click(function () {
                     $(".drafts-popup").fadeOut();
