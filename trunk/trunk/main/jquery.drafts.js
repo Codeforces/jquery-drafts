@@ -1,22 +1,18 @@
 (function ($) {
- 	var textareasToListen = [];
- 	var buttonsToListen = [];
-	
+    var textareasToListen = [];
+    var buttonsToListen = [];
+    var alertedOnFail = false;
+    var consecutiveFailCount = 0;
+    
     var updateButtonsPosition = function() {
-    	$.each(textareasToListen, function(index, textarea) {
-    		var button = buttonsToListen[index];
+        $.each(textareasToListen, function(index, textarea) {
+            var button = buttonsToListen[index];
             button.css("top", textarea.position().top + 8);
             button.css("left", textarea.position().left + textarea.get(0).clientWidth - button.outerWidth() - 6);
-    		
-    		setTimeout(function() {
-        		var button = buttonsToListen[index];
-                button.css("top", textarea.position().top + 8);
-                button.css("left", textarea.position().left + textarea.get(0).clientWidth - button.outerWidth() - 6);
-            }, 1000);
-    	});
+        });
     };
     
-    setInterval(updateButtonsPosition, 100);
+    setInterval(updateButtonsPosition, 200);
 
     $.fn.drafts = function (options) {
         var settings = $.extend({
@@ -24,12 +20,18 @@
             'textUseIt':'Use it',
             'url':'/data/drafts.php',
             'pollDelay': 5000,
-            'showDelay': 2000
+            'showDelay': 2500,
+            'saveErrorMessage': "Can't save draft. Possibly connection is lost or session is expired. Reload page?"
         }, options);
         
         var textareas = this;
         setTimeout(function() {
             textareas.each(function () {
+                var textarea = $(this);
+                if (textarea.parent()[0].tagName.toLowerCase() === "arclones") {
+                    return;
+                }
+                
                 if ($(".drafts-prototype").length === 0) {
                     $("<div class=\"drafts-prototype drafts-show-drafts\"><span class=\"drafts-button\">"
                         + settings["textDrafts"]
@@ -41,8 +43,6 @@
                         + settings["textDrafts"]
                         + "</h1><div class=\"drafts-entries\"></div></div>").appendTo($("body"));
                 }
-
-                var textarea = $(this);
 
                 if (textarea.prop("tagName").toLowerCase() != "textarea") {
                     $.error("jquery.drafts.js can be used only for textareas, but " + textarea.prop("tagName").toLowerCase() + " found.");
@@ -95,12 +95,30 @@
                 $(".drafts-popup .drafts-close").click(function () {
                     $(".drafts-popup").fadeOut();
                 });
-
+                
                 window.setInterval(function() {
                     var text = textarea.val();
                     $.post(settings["url"], {action: 'put', id: id, text: text}, function(response) {
-                        // No operations.
-                    }, "json");
+                        if (response === "OK") {
+                            consecutiveFailCount = 0;
+                        } else {
+                            ++consecutiveFailCount;
+                            if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
+                                alertedOnFail = true;
+                                if (confirm(settings["saveErrorMessage"])) {
+                                    location.reload();
+                                }
+                            }
+                        }
+                    }, "json").fail(function () {
+                        ++consecutiveFailCount;
+                        if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
+                            alertedOnFail = true;
+                            if (confirm(settings["saveErrorMessage"])) {
+                                location.reload();
+                            }
+                        }
+                    });
                 }, settings["pollDelay"]);
             });
         }, settings["showDelay"]);
