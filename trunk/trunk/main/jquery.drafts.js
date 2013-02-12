@@ -3,27 +3,50 @@
     var buttonsToListen = [];
     var alertedOnFail = false;
     var consecutiveFailCount = 0;
-    
+
     var updateButtonsPosition = function() {
         $.each(textareasToListen, function(index, textarea) {
             var button = buttonsToListen[index];
-            button.css("top", textarea.position().top + 8);
-            button.css("left", textarea.position().left + textarea.get(0).clientWidth - button.outerWidth() - 6);
+            var buttonContainer = textarea;
+
+            var buttonContainerSelector = button.attr("buttonContainerSelector");
+            if (buttonContainerSelector && buttonContainerSelector.length > 0) {
+                buttonContainer = $($(buttonContainerSelector)[0]);
+            }
+
+            var xOffset = buttonContainer.get(0).clientWidth - button.outerWidth() - 6;
+            var yOffset = 8;
+
+            var buttonXOffset = button.attr("buttonXOffset");
+            if (buttonXOffset) {
+                xOffset += parseInt(buttonXOffset);
+            }
+
+            var buttonYOffset = button.attr("buttonYOffset");
+            if (buttonYOffset) {
+                yOffset += parseInt(buttonYOffset);
+            }
+
+            button.css("top", buttonContainer.position().top + yOffset);
+            button.css("left", buttonContainer.position().left + xOffset);
         });
     };
-    
+
     setInterval(updateButtonsPosition, 200);
 
     $.fn.drafts = function (options) {
         var settings = $.extend({
-            'textDrafts':'Drafts',
-            'textUseIt':'Use it',
-            'url':'/data/drafts.php',
-            'pollDelay': 5000,
-            'showDelay': 2500,
-            'saveErrorMessage': "Can't save draft. Possibly connection is lost or session is expired. Reload page?"
+            textDrafts: 'Drafts',
+            textUseIt: 'Use it',
+            url: '/data/drafts.php',
+            pollDelay: 5000,
+            showDelay: 2500,
+            saveErrorMessage: "Can't save draft. Possibly connection is lost or session is expired. Reload page?",
+            useItHandler: function (textarea, text) {
+                textarea.val(text);
+            }
         }, options);
-        
+
         var textareas = this;
         setTimeout(function() {
             textareas.each(function () {
@@ -31,7 +54,7 @@
                 if (textarea.parent()[0].tagName.toLowerCase() === "arclones") {
                     return;
                 }
-                
+
                 if ($(".drafts-prototype").length === 0) {
                     $("<div class=\"drafts-prototype drafts-show-drafts\"><span class=\"drafts-button\">"
                         + settings["textDrafts"]
@@ -76,7 +99,7 @@
                             $("<div class='drafts-entry-actions'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div>").appendTo(entries);
                         });
                         entries.find(".drafts-button").click(function () {
-                            textarea.val($(this).parent().prev().text());
+                            settings["useItHandler"](textarea, $(this).parent().prev().text());
                             $(".drafts-popup").fadeOut();
                         });
                         popup.show();
@@ -84,10 +107,26 @@
                     }, "json");
                 });
 
-                $(textarea.parent()).append(button);
+                var buttonXOffset = settings["buttonXOffset"];
+                if (buttonXOffset) {
+                    button.attr("buttonXOffset", buttonXOffset);
+                }
+
+                var buttonYOffset = settings["buttonYOffset"];
+                if (buttonYOffset) {
+                    button.attr("buttonYOffset", buttonYOffset);
+                }
+
+                var buttonContainerSelector = settings["buttonContainerSelector"];
+                if (buttonContainerSelector && buttonContainerSelector.length > 0) {
+                    button.attr("buttonContainerSelector", buttonContainerSelector);
+                    $($(buttonContainerSelector)[0]).append(button);
+                } else {
+                    $(textarea.parent()).append(button);
+                }
 
                 button.css("position", "absolute");
-                
+
                 textareasToListen.push(textarea);
                 buttonsToListen.push(button);
                 updateButtonsPosition();
@@ -95,7 +134,7 @@
                 $(".drafts-popup .drafts-close").click(function () {
                     $(".drafts-popup").fadeOut();
                 });
-                
+
                 window.setInterval(function() {
                     var text = textarea.val();
                     $.post(settings["url"], {action: 'put', id: id, text: text}, function(response) {
