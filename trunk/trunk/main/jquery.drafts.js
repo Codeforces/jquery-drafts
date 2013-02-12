@@ -4,8 +4,8 @@
     var alertedOnFail = false;
     var consecutiveFailCount = 0;
 
-    var updateButtonsPosition = function() {
-        $.each(textareasToListen, function(index, textarea) {
+    var updateButtonsPosition = function () {
+        $.each(textareasToListen, function (index, textarea) {
             var button = buttonsToListen[index];
             var buttonContainer = textarea;
 
@@ -48,7 +48,7 @@
         }, options);
 
         var textareas = this;
-        setTimeout(function() {
+        setTimeout(function () {
             textareas.each(function () {
                 var textarea = $(this);
                 if (textarea.parent()[0].tagName.toLowerCase() === "arclones") {
@@ -92,9 +92,9 @@
                 button.click(function () {
                     var popup = $(".drafts-popup");
                     var entries = popup.find(".drafts-entries");
-                    $.post(settings["url"], {action: 'get', id: id}, function(items) {
+                    $.post(settings["url"], {action: 'get', id: id}, function (items) {
                         entries.empty();
-                        $.each(items, function(index, item) {
+                        $.each(items, function (index, item) {
                             $("<pre class='drafts-entry-body'></pre>").text(item).appendTo(entries);
                             $("<div class='drafts-entry-actions'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div>").appendTo(entries);
                         });
@@ -135,9 +135,9 @@
                     $(".drafts-popup").fadeOut();
                 });
 
-                window.setInterval(function() {
+                window.setInterval(function () {
                     var text = textarea.val();
-                    $.post(settings["url"], {action: 'put', id: id, text: text}, function(response) {
+                    $.post(settings["url"], {action: 'put', id: id, text: text},function (response) {
                         if (response === "OK") {
                             consecutiveFailCount = 0;
                         } else {
@@ -150,14 +150,14 @@
                             }
                         }
                     }, "json").fail(function () {
-                        ++consecutiveFailCount;
-                        if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
-                            alertedOnFail = true;
-                            if (confirm(settings["saveErrorMessage"])) {
-                                location.reload();
+                            ++consecutiveFailCount;
+                            if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
+                                alertedOnFail = true;
+                                if (confirm(settings["saveErrorMessage"])) {
+                                    location.reload();
+                                }
                             }
-                        }
-                    });
+                        });
                 }, settings["pollDelay"]);
             });
         }, settings["showDelay"]);
