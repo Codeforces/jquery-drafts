@@ -4,13 +4,20 @@
 
 .drafts-button {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background-color: #3a87ad;
     color: #ffffff;
     border-radius: 4px;
     font-size: 11px;
     padding: 3px 5px !important;
     font-weight: bold;
     cursor: pointer;
+}
+
+.drafts-button.drafts-online {
+    background-color: #3a87ad;
+}
+
+.drafts-button.drafts-offline {
+    background-color: pink;
 }
 
 .drafts-popup {
@@ -48,7 +55,7 @@
 }
 
 .drafts-popup h1 {
-    font-family: tahoma, arial, verdana, sans-serif, 'Lucida Sans';;
+    font-family: tahoma, arial, verdana, sans-serif, 'Lucida Sans';
     margin-top: 10px;
 }
 

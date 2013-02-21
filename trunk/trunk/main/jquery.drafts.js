@@ -56,7 +56,7 @@
                 }
 
                 if ($(".drafts-prototype").length === 0) {
-                    $("<div class=\"drafts-prototype drafts-show-drafts\"><span class=\"drafts-button\">"
+                    $("<div class=\"drafts-prototype drafts-show-drafts\"><span class=\"drafts-button drafts-online\">"
                         + settings["textDrafts"]
                         + "</span></div>").appendTo($("body"));
                 }
@@ -137,11 +137,20 @@
 
                 window.setInterval(function () {
                     var text = textarea.val();
-                    $.post(settings["url"], {action: 'put', id: id, text: text},function (response) {
+                    var innerButton = button.find(".drafts-button");
+                    $.post(settings["url"], {action: 'put', id: id, text: text}, function (response) {
                         if (response === "OK") {
                             consecutiveFailCount = 0;
+                            if (!innerButton.hasClass("drafts-online")) {
+                                innerButton.removeClass("drafts-offline");
+                                innerButton.addClass("drafts-online");
+                            }
                         } else {
                             ++consecutiveFailCount;
+                            if (!innerButton.hasClass("drafts-offline")) {
+                                innerButton.removeClass("drafts-online");
+                                innerButton.addClass("drafts-offline");
+                            }
                             if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
                                 alertedOnFail = true;
                                 if (confirm(settings["saveErrorMessage"])) {
@@ -151,6 +160,10 @@
                         }
                     }, "json").fail(function () {
                             ++consecutiveFailCount;
+                            if (!innerButton.hasClass("drafts-offline")) {
+                                innerButton.removeClass("drafts-online");
+                                innerButton.addClass("drafts-offline");
+                            }
                             if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
                                 alertedOnFail = true;
                                 if (confirm(settings["saveErrorMessage"])) {
