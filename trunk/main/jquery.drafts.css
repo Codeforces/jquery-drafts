@@ -12,7 +12,7 @@
     cursor: pointer;
 }
 
-.drafts-button.drafts-online {
+.drafts-button:not(.drafts-offline) {
     background-color: #3a87ad;
 }
 
