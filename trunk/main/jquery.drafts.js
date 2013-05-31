@@ -41,11 +41,21 @@
             url: '/data/drafts.php',
             pollDelay: 5000,
             showDelay: 2500,
-            saveErrorMessage: "Can't save draft. Possibly connection is lost or session is expired. Reload page?",
+            saveErrorMessage: "Can't save draft. Possibly connection is lost or session is expired. Stay on the page (cancel to reload)?",
             useItHandler: function (textarea, text) {
                 textarea.val(text);
             }
-        }, options);
+        });
+    
+        $.extend(settings, {
+            saveErrorHandler: function () {
+                if (!confirm(settings["saveErrorMessage"])) {
+                    location.reload();
+                }
+            }
+        });
+        
+        $.extend(settings, options);
 
         var textareas = this;
         setTimeout(function () {
@@ -153,9 +163,7 @@
                             }
                             if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
                                 alertedOnFail = true;
-                                if (confirm(settings["saveErrorMessage"])) {
-                                    location.reload();
-                                }
+                                settings["saveErrorHandler"]();
                             }
                         }
                     }, "json").fail(function () {
@@ -166,9 +174,7 @@
                             }
                             if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
                                 alertedOnFail = true;
-                                if (confirm(settings["saveErrorMessage"])) {
-                                    location.reload();
-                                }
+                                settings["saveErrorHandler"]();
                             }
                         });
                 }, settings["pollDelay"]);
