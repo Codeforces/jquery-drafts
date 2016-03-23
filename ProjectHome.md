@@ -1,0 +1,1 @@
+Shows small semivisible button in the top right corner of the textarea and allows to choose draft to replace textarea content.
