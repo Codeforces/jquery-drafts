@@ -34,6 +34,55 @@
 
     setInterval(updateButtonsPosition, 200);
 
+    function showDraftsPopup(textarea, settings) {
+        var popup = $(".drafts-popup");
+        var entries = popup.find(".drafts-entries");
+        entries.find(".drafts-button").click(function () {
+            settings["useItHandler"](textarea, $(this).parent().prev().text());
+            $(".drafts-popup").fadeOut();
+        });
+        popup.show();
+        popup.css("top", pageYOffset);
+    }
+
+    function addDraftEntry(item, settings) {
+        var popup = $(".drafts-popup");
+        var entries = popup.find(".drafts-entries");
+        var hasSame = false;
+        entries.find(".drafts-entry-body").each(function() {
+            if ($(this).text() == item) {
+                hasSame = true;
+                return false;
+            }
+        });
+        if (!hasSame) {
+            $("<pre class='drafts-entry-body'></pre>").text(item).appendTo(entries);
+            $("<div class='drafts-entry-actions'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div>").appendTo(entries);
+        }
+    }
+
+    function addFromLocalStorage(publicKey, key, settings) {
+        if (publicKey && key) {
+            var text = window.localStorage["draft-" + publicKey];
+            if (text) {
+                try {
+                    text = sjcl.decrypt(key, text);
+                    addDraftEntry(text, settings);
+                } catch (e) {
+                    window.localStorage.removeItem("draft-" + publicKey);
+                }
+            }
+        }
+    }
+
+    function putToLocalStorage(publicKey, key, text) {
+        if (publicKey && key && text) {
+            if (window.localStorage) {
+                window.localStorage["draft-" + publicKey] = sjcl.encrypt(key, text);
+            }
+        }
+    }
+
     $.fn.drafts = function (options) {
         var settings = $.extend({
             textDrafts: 'Drafts',
@@ -87,6 +136,32 @@
 
                 var id = textarea.attr("data-drafts-id");
 
+                var publicKey;
+                var key;
+
+                var textChanged = false;
+                window.setTimeout(function() {
+                    textarea.change(function() {
+                        textChanged = true;
+                    });
+                    textarea.bind('input propertychange', function() {
+                        textChanged = true;
+                    });
+                }, 60000);
+
+                window.setInterval(function() {
+                    if (!key) {
+                        $.post(settings["url"], {action: 'getKey', id: id}, function (result) {
+                            publicKey = result["publicKey"];
+                            key = result["key"];
+                        }, "json");
+                    }
+                    if (key && textChanged) {
+                        putToLocalStorage(publicKey, key, textarea.val());
+                        textChanged = false;
+                    }
+                }, 1000);
+
                 var button = $(".drafts-prototype").clone()
                     .removeClass("drafts-prototype")
                     .css("opacity", "0.2");
@@ -102,18 +177,17 @@
                 button.click(function () {
                     var popup = $(".drafts-popup");
                     var entries = popup.find(".drafts-entries");
+                    //entries.empty();
+                    //addFromLocalStorage(id, settings);
+                    //showDraftsPopup(settings);
+
                     $.post(settings["url"], {action: 'get', id: id}, function (items) {
                         entries.empty();
+                        addFromLocalStorage(publicKey, key, settings);
                         $.each(items, function (index, item) {
-                            $("<pre class='drafts-entry-body'></pre>").text(item).appendTo(entries);
-                            $("<div class='drafts-entry-actions'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div>").appendTo(entries);
+                            addDraftEntry(item, settings);
                         });
-                        entries.find(".drafts-button").click(function () {
-                            settings["useItHandler"](textarea, $(this).parent().prev().text());
-                            $(".drafts-popup").fadeOut();
-                        });
-                        popup.show();
-                        popup.css("top", pageYOffset);
+                        showDraftsPopup(textarea, settings);
                     }, "json");
                 });
 
