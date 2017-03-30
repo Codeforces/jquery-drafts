@@ -1,0 +1,4 @@
+/trunk/java/.idea
+/trunk/java/target
+/trunk/java/*.iml
+/trunk/main/copy-to-apps.bat
