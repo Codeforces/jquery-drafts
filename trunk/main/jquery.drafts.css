@@ -57,6 +57,8 @@
 .drafts-popup h1 {
     font-family: tahoma, arial, verdana, sans-serif, 'Lucida Sans', sans-serif;
     margin-top: 10px;
+    font-size: 24px;
+    font-weight: bold;
 }
 
 .drafts-popup .drafts-close {

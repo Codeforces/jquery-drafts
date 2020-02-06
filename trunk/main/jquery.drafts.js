@@ -3,11 +3,15 @@
     var buttonsToListen = [];
     var alertedOnFail = false;
     var consecutiveFailCount = 0;
+    var textById = {};
 
     var updateButtonsPosition = function () {
         $.each(textareasToListen, function (index, textarea) {
             var button = buttonsToListen[index];
             var buttonContainer = textarea;
+            if (buttonContainer.is(":hidden")) {
+                button.hide();
+            }
 
             var buttonContainerSelector = button.attr("buttonContainerSelector");
             if (buttonContainerSelector && buttonContainerSelector.length > 0) {
@@ -29,6 +33,9 @@
 
             button.css("top", buttonContainer.position().top + yOffset);
             button.css("left", buttonContainer.position().left + xOffset);
+            if (!buttonContainer.is(":hidden")) {
+                button.show();
+            }
         });
     };
 
@@ -49,7 +56,7 @@
         var popup = $(".drafts-popup");
         var entries = popup.find(".drafts-entries");
         var hasSame = false;
-        entries.find(".drafts-entry-body").each(function() {
+        entries.find(".drafts-entry-body").each(function () {
             if ($(this).text() == item) {
                 hasSame = true;
                 return false;
@@ -95,7 +102,7 @@
                 textarea.val(text);
             }
         });
-    
+
         $.extend(settings, {
             saveErrorHandler: function () {
                 if (!confirm(settings["saveErrorMessage"])) {
@@ -103,10 +110,13 @@
                 }
             }
         });
-        
+
         $.extend(settings, options);
 
         var textareas = this;
+        var hasDraftsPrototype = false;
+        var hasDraftsPopup = false;
+
         setTimeout(function () {
             textareas.each(function () {
                 var textarea = $(this);
@@ -114,19 +124,21 @@
                     return;
                 }
 
-                if ($(".drafts-prototype").length === 0) {
+                if (!hasDraftsPrototype && $(".drafts-prototype").length === 0) {
                     $("<div class=\"drafts-prototype drafts-show-drafts\"><span class=\"drafts-button drafts-online\">"
                         + settings["textDrafts"]
                         + "</span></div>").appendTo($("body"));
+                    hasDraftsPrototype = true;
                 }
 
-                if ($(".drafts-popup").length === 0) {
+                if (!hasDraftsPopup && $(".drafts-popup").length === 0) {
                     $("<div class=\"drafts-popup\"><div class=\"drafts-close\">&times;</div><h1>"
                         + settings["textDrafts"]
                         + "</h1><div class=\"drafts-entries\"></div></div>").appendTo($("body"));
+                    hasDraftsPopup = true;
                 }
 
-                if (textarea.prop("tagName").toLowerCase() != "textarea") {
+                if (textarea.prop("tagName").toLowerCase() !== "textarea") {
                     $.error("jquery.drafts.js can be used only for textareas, but " + textarea.prop("tagName").toLowerCase() + " found.");
                 }
 
@@ -135,21 +147,20 @@
                 }
 
                 var id = textarea.attr("data-drafts-id");
-
                 var publicKey;
                 var key;
 
                 var textChanged = false;
-                window.setTimeout(function() {
-                    textarea.change(function() {
+                window.setTimeout(function () {
+                    textarea.change(function () {
                         textChanged = true;
                     });
-                    textarea.bind('input propertychange', function() {
+                    textarea.bind('input propertychange', function () {
                         textChanged = true;
                     });
                 }, 60000);
 
-                window.setInterval(function() {
+                window.setInterval(function () {
                     if (!key) {
                         $.post(settings["url"], {action: 'getKey', id: id}, function (result) {
                             publicKey = result["publicKey"];
@@ -218,10 +229,19 @@
                 $(".drafts-popup .drafts-close").click(function () {
                     $(".drafts-popup").fadeOut();
                 });
+                $(document).keydown(function(e) {
+                    if (e.keyCode === 27) {
+                        $(".drafts-popup").fadeOut();
+                    }
+                });
 
                 window.setInterval(function () {
                     var text = textarea.val();
                     var innerButton = button.find(".drafts-button");
+                    if (textById[id] === text) {
+                        return;
+                    }
+                    textById[id] = text;
                     $.post(settings["url"], {action: 'put', id: id, text: text}, function (response) {
                         if (response === "OK") {
                             consecutiveFailCount = 0;
@@ -241,16 +261,16 @@
                             }
                         }
                     }, "json").fail(function () {
-                            ++consecutiveFailCount;
-                            if (!innerButton.hasClass("drafts-offline")) {
-                                innerButton.removeClass("drafts-online");
-                                innerButton.addClass("drafts-offline");
-                            }
-                            if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
-                                alertedOnFail = true;
-                                settings["saveErrorHandler"]();
-                            }
-                        });
+                        ++consecutiveFailCount;
+                        if (!innerButton.hasClass("drafts-offline")) {
+                            innerButton.removeClass("drafts-online");
+                            innerButton.addClass("drafts-offline");
+                        }
+                        if (consecutiveFailCount >= 5 * textareasToListen.length && !alertedOnFail) {
+                            alertedOnFail = true;
+                            settings["saveErrorHandler"]();
+                        }
+                    });
                 }, settings["pollDelay"]);
             });
         }, settings["showDelay"]);
