@@ -71,11 +71,11 @@
         });
         let time = "";
         if (item.time !== "") {
-            time = new Date(Date.parse(item.time)).toLocaleString();
+            time = new Date(item.time).toLocaleString();
         }
         if (!hasSame) {
             $("<pre class='drafts-entry-body'></pre>").text(item.draft).appendTo(entries);
-            $("<div class='drafts-entry-actions' style='display: inline'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div><span> " + _escapeHtml(time) + "</span>").appendTo(entries);
+            $("<div class='drafts-entry-actions' style='display: inline'><span class='drafts-button'>" + settings["textUseIt"] + "</span></div><span class='drafts-creation-time'> " + _escapeHtml(time) + "</span>").appendTo(entries);
         }
     }
 
@@ -185,14 +185,14 @@
                                 if (time) {
                                     time = sjcl.decrypt(key, time);
                                 } else {
-                                    time = new Date().toLocaleString();
+                                    time = new Date().toISOString();
                                 }
                                 $.post(settings["url"], {action: 'put', id: id, text: text, time: time});
                             }
                         }, "json");
                     }
                     if (key && textChanged) {
-                        putToLocalStorage(publicKey, key, textarea.val(), new Date().toLocaleString());
+                        putToLocalStorage(publicKey, key, textarea.val(), new Date().toISOString());
                         textChanged = false;
                     }
                 }, 1000);
@@ -302,7 +302,7 @@
                         return;
                     }
                     textById[id] = text;
-                    $.post(settings["url"], {action: 'put', id: id, text: text, time: new Date().toLocaleString()}, function (response) {
+                    $.post(settings["url"], {action: 'put', id: id, text: text, time: new Date().toISOString()}, function (response) {
                         if (response === "OK") {
                             if (!innerButton.hasClass("drafts-online")) {
                                 innerButton.removeClass("drafts-offline");
