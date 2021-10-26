@@ -1,3 +1,7 @@
+.classpath
+.project
+.settings/
+
 /trunk/java/.idea
 /trunk/java/target
 /trunk/java/*.iml
