@@ -75,3 +75,9 @@
     cursor: pointer;
     width: auto;
 }
+
+.drafts-popup .drafts-creation-time {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    margin: 0 5px;
+}
