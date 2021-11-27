@@ -21,7 +21,7 @@ jobs:
         run: |
           cd trunk/java
           mvn --batch-mode test
-  publish:
+  deploy:
     if: github.ref == 'refs/heads/master' && github.repository_owner == 'Codeforces'
     needs: test
     runs-on: windows-latest
@@ -34,7 +34,7 @@ jobs:
         with:
           java-version: "17"
           distribution: "adopt"
-      - name: Publish
+      - name: Deploy
         run: |
           cd code
           mvn --batch-mode deploy -DskipTests
