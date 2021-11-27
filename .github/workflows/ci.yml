@@ -36,5 +36,5 @@ jobs:
           distribution: "adopt"
       - name: Deploy
         run: |
-          cd code
+          cd trunk/java
           mvn --batch-mode deploy -DskipTests
