@@ -10,6 +10,14 @@
     <name>drafts</name>
     <url>http://code.google.com/p/jquery-drafts</url>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Codeforces/jquery-drafts</url>
+        </repository>
+    </distributionManagement>
+
     <inceptionYear>2010</inceptionYear>
     <description>
         Executes external processes via external service if possible, otherwise uses ProcessBuilder
